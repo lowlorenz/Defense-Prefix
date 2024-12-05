@@ -1,0 +1,32 @@
+Bootstrap: docker
+From: nvidia/cuda:11.3.0-devel-ubuntu20.04
+
+%post
+    # Update the package manager and install necessary tools
+    apt-get update && apt-get install -y \
+        sudo \
+        wget \
+        python3 \
+        python3-pip \
+        git
+
+    # Install Python dependencies
+    pip3 install -r /tmp/requirements.txt
+    pip3 install torch==1.12.0+cu113 torchvision==0.13.0+cu113 torchaudio==0.12.0 --extra-index-url https://download.pytorch.org/whl/cu113
+
+%files
+    # Copy the requirements.txt into the container
+    ./requirements.txt /tmp/requirements.txt
+
+# %environment
+#     # Set up environment variables
+#     export PATH=/usr/local/cuda/bin:$PATH
+#     export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+
+# %labels
+#     Author YourName
+#     Version 1.0
+
+%runscript
+    # Define the container’s runscript
+    echo "Container initialized!"
