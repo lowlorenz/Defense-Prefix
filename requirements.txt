@@ -10,3 +10,6 @@ omegaconf
 pytorch-lightning
 einops
 transformers
+open-clip-torch
+wandb
+tqdm
