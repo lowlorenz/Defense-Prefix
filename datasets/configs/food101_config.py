@@ -1,1 +1,0 @@
-templates = ["a photo of a {}, a type of food."]

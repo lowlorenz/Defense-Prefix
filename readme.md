@@ -1,0 +1,3 @@
+-[] Follow up with OCR results
+-[] check how big the runtime in wandb is
+-[] check the text file for how long each run was
