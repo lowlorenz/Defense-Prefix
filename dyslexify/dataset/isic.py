@@ -5,12 +5,12 @@ import torch
 from PIL import Image
 from pathlib import Path
 from typing import Any, Dict, List
-from dislexify.dataset.base import BaseTypographicDataset
+from dyslexify.dataset.base import BaseTypographicDataset
 
 
-class BCN20kBase(BaseTypographicDataset):
+class ISIC2019Base(BaseTypographicDataset):
     """
-    Base class for BCN 20k datasets.
+    Base class for ISIC 2019 datasets.
     """
 
     def __init__(
@@ -38,33 +38,29 @@ class BCN20kBase(BaseTypographicDataset):
 
     def _load_dataset(self, split: str) -> pd.DataFrame:
         """
-        Load the BCN 20k dataset metadata for the specified split.
+        Load the ISIC 2019 dataset metadata for the specified split.
 
-        Returns a DataFrame with the BCN data.
+        Returns a DataFrame with label columns coerced to booleans.
         """
-        if split == "train":
-            data_path = self.data_path / "bcn_20k_train.csv"
-        else:
-            # For test/val, we'll use train data (since only train CSV is provided)
-            # In practice, you might want to split the train data
-            data_path = self.data_path / "bcn_20k_train.csv"
+        data_path = self.data_path / "ISIC_2019_Training_GroundTruth.csv"
 
         if not data_path.exists():
-            raise FileNotFoundError(f"BCN data file not found: {data_path}")
+            raise FileNotFoundError(f"Ground truth file not found: {data_path}")
 
         metadata = pd.read_csv(data_path)
 
-        # Filter by split if column exists
-        if "split" in metadata.columns and split != "train":
-            # If we want test data but only have train CSV, we'll use all data
-            # You might want to implement a proper train/test split here
-            pass
+        # Normalize label columns to boolean for robustness
+        label_cols = ["MEL", "NV", "BCC", "AK", "BKL", "DF", "VASC", "SCC", "UNK"]
+        for col in label_cols:
+            if col in metadata.columns:
+                values = pd.to_numeric(metadata[col], errors="coerce").fillna(0)
+                metadata[col] = (values == 1.0).astype(bool)
 
         return metadata
 
     def _get_valid_classes(self) -> List[str]:
         """
-        Extract valid classes from the BCN dataset.
+        Extract valid classes from the ISIC dataset.
 
         Returns:
             List of valid class names that can be used for typographic attacks
@@ -74,24 +70,8 @@ class BCN20kBase(BaseTypographicDataset):
     def _get_sample_data(self, index: int) -> Dict[str, Any]:
         row = self.dataset.iloc[index]
 
-        # Determine the correct image directory based on the filename
-        # BCN test images are in BCN_20k_test/bcn_20k_test/
-        # Training images should be in a similar structure or main directory
-        bcn_filename = row["bcn_filename"]
-
-        # Try test directory first
-        test_dir = self.data_path / "BCN_20k_test" / "bcn_20k_test"
-        image_path = test_dir / bcn_filename
-
-        # If not found in test, try main directory or train directory
-        if not image_path.exists():
-            # Try other possible locations
-            train_dir = self.data_path / "BCN_20k_train" / "bcn_20k_train"
-            if train_dir.exists():
-                image_path = train_dir / bcn_filename
-            else:
-                # Try main directory
-                image_path = self.data_path / bcn_filename
+        train_dir = self.data_path / "Train"
+        image_path = train_dir / f"{row['image']}.jpg"
 
         if not image_path.exists():
             raise FileNotFoundError(f"Image not found: {image_path}")
@@ -103,7 +83,7 @@ class BCN20kBase(BaseTypographicDataset):
         return {
             "image": image,
             "class": class_idx,
-            "image_name": bcn_filename.replace(".jpg", ""),
+            "image_name": row["image"],
         }
 
     def _get_sample_with_class_text(self, index: int) -> Dict[str, Any]:
@@ -116,7 +96,7 @@ class BCN20kBase(BaseTypographicDataset):
         try:
             return self.classes.index(class_name)
         except ValueError:
-            raise ValueError(f"Class '{class_name}' not found in BCN classes")
+            raise ValueError(f"Class '{class_name}' not found in ISIC classes")
 
     def _get_dataset_size(self) -> int:
         return len(self.dataset)
@@ -128,11 +108,11 @@ class BCN20kBase(BaseTypographicDataset):
             raise ValueError(f"Invalid class index: {index}")
 
 
-class BCN20k(BCN20kBase):
+class ISIC2019(ISIC2019Base):
     """
-    Typographic attack dataset for BCN 20k skin lesion classification.
+    Typographic attack dataset for ISIC skin lesion classification.
 
-    This class extends BaseTypographicDataset to work with BCN datasets,
+    This class extends BaseTypographicDataset to work with ISIC datasets,
     providing typographic attack functionality for skin lesion images.
     """
 
@@ -146,10 +126,10 @@ class BCN20k(BCN20kBase):
         num_workers: int = None,
     ):
         """
-        Initialize the BCN typographic dataset.
+        Initialize the ISIC typographic dataset.
 
         Args:
-            root: Root directory containing BCN dataset
+            root: Root directory containing ISIC dataset
             split: Dataset split (train, val, test)
             preprocess: Optional preprocessing function
             return_index: Whether to return sample index
@@ -158,14 +138,15 @@ class BCN20k(BCN20kBase):
         """
 
         self.classes = [
-            "Actinic Keratoses",
-            "Basal Cell Carcinoma",
-            "Benign Keratosis-like Lesions",
-            "Dermatofibroma",
-            "Melanocytic Nevi",
             "Melanoma",
-            "Squamous Cell Carcinoma",
-            "Vascular Lesions",
+            "Melanocytic nevus",
+            "Basal cell carcinoma",
+            "Actinic keratosis",
+            "Benign keratosis",
+            "Dermatofibroma",
+            "Vascular lesion",
+            "Squamous cell carcinoma",
+            "Unknown skin lesion",
         ]
 
         super().__init__(
@@ -179,50 +160,49 @@ class BCN20k(BCN20kBase):
 
     def _get_class_index_from_row(self, row: pd.Series) -> int:
         """
-        Map BCN diagnosis codes to the class names.
+        Map abbreviated one-hot labels to the human-readable class index.
+        Falls back to "Unknown skin lesion" when none are marked.
         """
-        diagnosis_to_class = {
-            "AK": "Actinic Keratoses",
-            "BCC": "Basal Cell Carcinoma",
-            "BKL": "Benign Keratosis-like Lesions",
-            "DF": "Dermatofibroma",
-            "NV": "Melanocytic Nevi",
+        abbr_to_class = {
             "MEL": "Melanoma",
-            "SCC": "Squamous Cell Carcinoma",
-            "VASC": "Vascular Lesions",
+            "NV": "Melanocytic nevus",
+            "BCC": "Basal cell carcinoma",
+            "AK": "Actinic keratosis",
+            "BKL": "Benign keratosis",
+            "DF": "Dermatofibroma",
+            "VASC": "Vascular lesion",
+            "SCC": "Squamous cell carcinoma",
+            "UNK": "Unknown skin lesion",
         }
 
-        diagnosis = row["diagnosis"]
+        for abbr, class_name in abbr_to_class.items():
+            if abbr in row and bool(row[abbr]):
+                return self._get_class_index(class_name)
 
-        if diagnosis in diagnosis_to_class:
-            class_name = diagnosis_to_class[diagnosis]
-            return self._get_class_index(class_name)
-        else:
-            raise ValueError(f"Unsupported diagnosis: {diagnosis}")
+        return self._get_class_index("Unknown skin lesion")
 
 
-class BCN20kBinary(BCN20kBase):
+class ISIC2019Binary(ISIC2019Base):
     """
-    Binary typographic attack dataset for BCN 20k skin lesion classification.
+    Binary typographic attack dataset for ISIC skin lesion classification.
 
-    This class provides binary classification (malignant vs benign)
-    for typographic attacks on BCN datasets.
+    This class provides binary classification (melanoma vs non-melanoma)
+    for typographic attacks on ISIC datasets.
     """
 
     def __init__(
         self,
         root: str,
-        split: str = "train",
         preprocess=None,
         return_index: bool = False,
         position: str = "random",
         num_workers: int = None,
     ):
         """
-        Initialize the BCN binary typographic dataset.
+        Initialize the ISIC binary typographic dataset.
 
         Args:
-            root: Root directory containing BCN dataset
+            root: Root directory containing ISIC dataset
             split: Dataset split (train, val, test)
             preprocess: Optional preprocessing function
             return_index: Whether to return sample index
@@ -230,7 +210,7 @@ class BCN20kBinary(BCN20kBase):
             num_workers: Number of worker processes for generation
         """
         self.classes = ["Benign", "Malignant"]
-
+        split = "train"
         super().__init__(
             root=root,
             split=split,
@@ -262,31 +242,25 @@ class BCN20kBinary(BCN20kBase):
             row: Metadata row
 
         Returns:
-            Class index (0 for benign, 1 for malignant)
+            Class index (0 or 1)
         """
-        diagnosis = row["diagnosis"]
-
-        # Malignant diagnoses
-        malignant_diagnoses = ["MEL", "BCC", "SCC"]
-
-        if diagnosis in malignant_diagnoses:
-            return 1  # Malignant
+        if row["MEL"] or row["BCC"] or row["SCC"] or row["AK"]:
+            return 1
         else:
-            return 0  # Benign
+            return 0
 
 
 if __name__ == "__main__":
-    # Example usage of the multi-class BCN dataset
-    ds = BCN20k(
-        root="/datasets/BCN_20k",
+    # Example usage of the multi-class ISIC dataset
+    ds = ISIC2019(
+        root="/datasets/isic2019_typo",
         split="train",
         position="random",
     )
 
-    # Example usage of the binary BCN dataset (malignant vs benign)
-    ds_binary = BCN20kBinary(
-        root="/datasets/BCN_20k",
+    # Example usage of the binary ISIC dataset (melanoma vs non-melanoma)
+    ds_binary = ISIC2019Binary(
+        root="/datasets/isic2019_typo",
         split="train",
         position="random",
     )
-# %%

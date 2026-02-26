@@ -1,36 +1,40 @@
-# https://www.kaggle.com/datasets/hasnainjaved/melanoma-skin-cancer-dataset-of-10000-images?resource=download
-
-# %%
+import os
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from PIL import Image
 
-from dislexify.dataset.base import BaseTypographicDataset
+from dyslexify.dataset.base import BaseTypographicDataset
 
 
-class Melanoma(BaseTypographicDataset):
+class ChestXRay(BaseTypographicDataset):
     """
-    Wraps a simple folder dataset with structure:
+    Chest X-Ray dataset for pneumonia detection with typographic attack support.
 
+    Expected directory structure:
         root/
           train/
-            benign/
-              *.jpg|*.png|...
-            malignant/
-              *.jpg|*.png|...
+            NORMAL/
+              *.jpeg
+            PNEUMONIA/
+              *.jpeg
           test/
-            benign/
-            malignant/
-
-    into the typographic dataset pipeline defined by BaseTypographicDataset.
+            NORMAL/
+              *.jpeg
+            PNEUMONIA/
+              *.jpeg
+          val/
+            NORMAL/
+              *.jpeg
+            PNEUMONIA/
+              *.jpeg
     """
 
-    IMAGE_EXTENSIONS = {".jpg", ".jpeg"}
+    IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
     def __init__(self, *args, **kwargs):
-        self.classes = ["Benign", "Malignant"]
-        self.templates = ["A photo of a {} melanoma."]
+        self.classes = ["Normal", "Pneumonia"]
+        self.templates = ["A photo of a {} chest x-ray."]
         super().__init__(*args, **kwargs)
 
     def _load_dataset(self, split: str) -> Any:
@@ -47,13 +51,13 @@ class Melanoma(BaseTypographicDataset):
         if not class_dirs:
             raise RuntimeError(f"No class subdirectories found under {split_dir}")
 
-        self._class_names = [d.name for d in class_dirs]
+        self._class_names = [d.name.capitalize() for d in class_dirs]
         self._class_to_index = {name: idx for idx, name in enumerate(self._class_names)}
 
         # Gather image files
-        samples: List[Tuple[Path, str]] = []
+        samples: List[tuple[Path, str]] = []
         for class_dir in class_dirs:
-            class_name = class_dir.name
+            class_name = class_dir.name.capitalize()
             for path in class_dir.rglob("*"):
                 if path.is_file() and path.suffix.lower() in self.IMAGE_EXTENSIONS:
                     samples.append((path, class_name))
@@ -65,39 +69,38 @@ class Melanoma(BaseTypographicDataset):
         return samples
 
     def _get_valid_classes(self) -> List[str]:
+        """Return list of valid class names for typographic attacks."""
         return list(self._class_names)
 
     def _get_sample_data(self, index: int) -> Dict[str, Any]:
+        """Get sample data for a given index."""
         image_path, class_name = self._samples[index]
         image = Image.open(image_path).convert("RGB")
         class_index = self._get_class_index(class_name)
         return {"image": image, "class": class_index, "class_name": class_name}
 
     def _get_sample_with_class_text(self, index: int) -> Dict[str, Any]:
+        """Get sample data with class text included."""
         sample = self._get_sample_data(index)
-        sample["class_text"] = self._get_class_name_from_index(sample["class"])  # type: ignore[index]
+        sample["class_text"] = self._get_class_name_from_index(sample["class"])
         return sample
 
     def _get_class_index(self, class_name: str) -> int:
-        if class_name not in self._class_to_index:
-            raise KeyError(f"Unknown class name: {class_name}")
+        """Get the index of a class in the dataset."""
         return self._class_to_index[class_name]
 
     def _get_dataset_size(self) -> int:
+        """Get the total number of samples in the dataset."""
         return len(self._samples)
 
     def _get_class_name_from_index(self, index: int) -> str:
-        if index < 0 or index >= len(self._class_names):
-            raise IndexError(f"Class index out of range: {index}")
+        """Get the class name from a class index."""
         return self._class_names[index]
 
 
 if __name__ == "__main__":
-    ds = Melanoma(
-        root="/datasets/melanoma_cancer_dataset_typo",
-        split="test",
-        position="bottom",
-    )
-    print(ds.dataset)
+    ds = ChestXRay(root="/datasets/chest_xray_typo/", split="train")
+    print(ds[0])
+    import code
 
-# %%
+    code.interact(local=dict(globals(), **locals()))

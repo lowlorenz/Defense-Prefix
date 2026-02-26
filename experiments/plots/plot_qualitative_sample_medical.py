@@ -6,11 +6,11 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 from torch.utils.data import DataLoader
 
-from dislexify.config import MODELS, DEVICE
-from dislexify.dataset import HAM10k
-from dislexify.zeroshot import calculate_text_features
-from dislexify.defend import dislexify_openclip_model
-from dislexify.cache.collector import change_attn_implementation_to_hookable
+from dyslexify.config import MODELS, DEVICE
+from dyslexify.dataset import HAM10k
+from dyslexify.zeroshot import calculate_text_features
+from dyslexify.defend import dislexify_openclip_model
+from dyslexify.cache.collector import change_attn_implementation_to_hookable
 
 
 def load_models(device: str) -> Tuple:

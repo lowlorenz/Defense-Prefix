@@ -26,10 +26,10 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from dislexify.cache.collector import change_attn_implementation_to_hookable
-from dislexify.config import MODELS
-from dislexify.dataset.ImageNet100 import ImageNet100
-from dislexify.zeroshot import calculate_text_features
+from dyslexify.cache.collector import change_attn_implementation_to_hookable
+from dyslexify.config import MODELS
+from dyslexify.dataset.ImageNet100 import ImageNet100
+from dyslexify.zeroshot import calculate_text_features
 
 
 def create_zero_cls_attention_result_hook(head_idx: int) -> Callable:

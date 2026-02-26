@@ -1,5 +1,5 @@
 # %%
-from dislexify.dataset.base import BaseRealTypographicDataset
+from dyslexify.dataset.base import BaseRealTypographicDataset
 from datasets import load_dataset
 from torch.utils.data import Dataset
 from PIL import Image

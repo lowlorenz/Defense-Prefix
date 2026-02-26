@@ -3,11 +3,11 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from dislexify.cache.collector import OpenClipActivationCollector
-from dislexify.config import MODELS
-from dislexify.dataset.melanoma import Melanoma
-from dislexify.dataset.unsplash import UnsplashTypographicDataset
-from dislexify.cache.block import BlockAttention
+from dyslexify.cache.collector import OpenClipActivationCollector
+from dyslexify.config import MODELS
+from dyslexify.dataset.melanoma import Melanoma
+from dyslexify.dataset.unsplash import UnsplashTypographicDataset
+from dyslexify.cache.block import BlockAttention
 import math
 import einops
 from pathlib import Path

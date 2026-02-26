@@ -34,5 +34,5 @@ ui = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["dislexify*", "experiments*"]
+include = ["dyslexify*", "experiments*"]
 exclude = ["tests*", "notebooks*", "results*", "docs*"]

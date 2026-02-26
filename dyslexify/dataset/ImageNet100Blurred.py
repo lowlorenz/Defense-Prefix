@@ -3,9 +3,9 @@ import json
 import torch
 from PIL import Image
 from typing import List, Dict, Any, Tuple
-from dislexify.dataset.utils import _transform
-from dislexify.dataset.base import BaseTypographicDataset
-from dislexify.dataset.ImageNet100 import imagenet_100_classes, imagenet_100_templates
+from dyslexify.dataset.utils import _transform
+from dyslexify.dataset.base import BaseTypographicDataset
+from dyslexify.dataset.ImageNet100 import imagenet_100_classes, imagenet_100_templates
 
 
 class ImageNet100Blurred(BaseTypographicDataset):

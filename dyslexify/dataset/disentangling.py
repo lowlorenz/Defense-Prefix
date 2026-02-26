@@ -1,4 +1,4 @@
-from dislexify.dataset.base import BaseRealTypographicDataset
+from dyslexify.dataset.base import BaseRealTypographicDataset
 import json
 from pathlib import Path
 import torch

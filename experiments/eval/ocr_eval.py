@@ -1,7 +1,7 @@
 import open_clip
-from dislexify.config import MODELS
-from dislexify.dataset.iiit5k import IIIT5K
-from dislexify.defend import dislexify_openclip_model
+from dyslexify.config import MODELS
+from dyslexify.dataset.iiit5k import IIIT5K
+from dyslexify.defend import dislexify_openclip_model
 from torch.utils.data import DataLoader
 import torch
 import json

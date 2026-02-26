@@ -4,12 +4,116 @@ import json
 from PIL import Image
 import os
 from typing import Tuple, List, Dict, Any
-from dislexify.dataset.utils import _transform
-from dislexify.dataset.base import BaseTypographicDataset
-from dislexify.dataset.ImageNet100 import imagenet_100_templates, imagenet_100_classes
+from dyslexify.dataset.utils import _transform
+from dyslexify.dataset.base import BaseTypographicDataset
+
+imagenet_100_classes = [
+    "cock",
+    "tailed frog",
+    "green snake",
+    "barn spider",
+    "bee eater",
+    "snail",
+    "limpkin",
+    "hen",
+    "loggerhead",
+    "king snake",
+    "garden spider",
+    "hornbill",
+    "sea slug",
+    "American coot",
+    "goldfinch",
+    "leatherback turtle",
+    "garter snake",
+    "black widow",
+    "hummingbird",
+    "chiton",
+    "bustard",
+    "indigo bunting",
+    "mud turtle",
+    "vine snake",
+    "tarantula",
+    "toucan",
+    "chambered nautilus",
+    "red-backed sandpiper",
+    "bulbul",
+    "terrapin",
+    "night snake",
+    "wolf spider",
+    "drake",
+    "Dungeness crab",
+    "redshank",
+    "magpie",
+    "banded gecko",
+    "boa constrictor",
+    "tick",
+    "goose",
+    "rock crab",
+    "oystercatcher",
+    "chickadee",
+    "common iguana",
+    "green mamba",
+    "black grouse",
+    "black swan",
+    "spiny lobster",
+    "pelican",
+    "tench",
+    "water ouzel",
+    "whiptail",
+    "sea snake",
+    "ptarmigan",
+    "wallaby",
+    "crayfish",
+    "albatross",
+    "goldfish",
+    "kite",
+    "agama",
+    "horned viper",
+    "prairie chicken",
+    "wombat",
+    "hermit crab",
+    "sea lion",
+    "great white shark",
+    "bald eagle",
+    "green lizard",
+    "diamondback",
+    "peacock",
+    "jellyfish",
+    "white stork",
+    "tiger shark",
+    "great grey owl",
+    "Komodo dragon",
+    "sidewinder",
+    "macaw",
+    "sea anemone",
+    "spoonbill",
+    "hammerhead",
+    "common newt",
+    "American alligator",
+    "harvestman",
+    "sulphur-crested cockatoo",
+    "flatworm",
+    "flamingo",
+    "electric ray",
+    "spotted salamander",
+    "thunder snake",
+    "scorpion",
+    "lorikeet",
+    "nematode",
+    "bittern",
+    "stingray",
+    "axolotl",
+    "hognose snake",
+    "black and gold garden spider",
+    "coucal",
+    "conch",
+    "crane",
+]
+
+imagenet_100_templates = ["a photo of a {}."]
 
 
-class ImageNet100Adaptive(BaseTypographicDataset):
+class ImageNet100(BaseTypographicDataset):
     def __init__(
         self,
         root,
@@ -111,7 +215,7 @@ class ImageNet100Adaptive(BaseTypographicDataset):
 
 if __name__ == "__main__":
     # Example usage with distributed processing
-    dataset = ImageNet100Adaptive(
+    dataset = ImageNet100(
         root="/datasets/imagenet-100-typo",
         split="val",
         preprocess=None,  # No preprocessing to get raw images

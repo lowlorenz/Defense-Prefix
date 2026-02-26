@@ -11,12 +11,12 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from tqdm import tqdm
 
-from dislexify.cache.block import BlockResidual
-from dislexify.cache.cache import TypoLabeledResidualCache
-from dislexify.cache.collector import OpenClipActivationCollector
-from dislexify.config import DEVICE, MODELS
-from dislexify.dataset.ImageNet100 import ImageNet100
-from dislexify.probes import linear_probe_accuracy
+from dyslexify.cache.block import BlockResidual
+from dyslexify.cache.cache import TypoLabeledResidualCache
+from dyslexify.cache.collector import OpenClipActivationCollector
+from dyslexify.config import DEVICE, MODELS
+from dyslexify.dataset.ImageNet100 import ImageNet100
+from dyslexify.probes import linear_probe_accuracy
 from experiments.plot_config import COLOR_NORMAL, COLOR_TYPO, FIGSIZE
 
 

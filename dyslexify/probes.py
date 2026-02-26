@@ -1,5 +1,5 @@
 import torch
-from dislexify.cache.cache import ActivationCache
+from dyslexify.cache.cache import ActivationCache
 import torch.nn as nn
 from sklearn.model_selection import train_test_split
 import torch.nn.functional as F

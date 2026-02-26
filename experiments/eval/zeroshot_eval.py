@@ -1,9 +1,9 @@
 import open_clip
-from dislexify.config import MODELS
+from dyslexify.config import MODELS
 from typing import List
 from torch import nn
 from typing import Tuple, Any
-from dislexify.dataset import (
+from dyslexify.dataset import (
     ImageNet100,
     ImageNet100Blurred,
     Food101,
@@ -19,8 +19,8 @@ from dislexify.dataset import (
     HAM10k,
 )
 from torch.utils.data import DataLoader
-from dislexify.zeroshot import calculate_text_features, zeroshot_classifier
-from dislexify.defend import dislexify_openclip_model
+from dyslexify.zeroshot import calculate_text_features, zeroshot_classifier
+from dyslexify.defend import dislexify_openclip_model
 import torch
 import json
 from pathlib import Path

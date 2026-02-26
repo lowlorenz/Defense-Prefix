@@ -1,9 +1,9 @@
 from PIL import Image
 import torch
-from dislexify.dataset.utils import _transform
+from dyslexify.dataset.utils import _transform
 from typing import Tuple, List, Dict, Any
 from datasets import load_dataset
-from dislexify.dataset.base import BaseTypographicDataset
+from dyslexify.dataset.base import BaseTypographicDataset
 
 
 class UnsplashTypographicDataset(BaseTypographicDataset):

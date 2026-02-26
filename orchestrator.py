@@ -32,16 +32,15 @@ def main(args):
     device = args.device
     mode = args.mode
 
-    # linear_probe_experiment = LinearProbeExperiment(
-    #     model_short_name=model,
-    #     device=device,
-    #     batch_size=16,
-    #     num_workers=32,
-    # )
-    # linear_probe_experiment.load_or_run_experiment()
-    # del linear_probe_experiment
+    linear_probe_experiment = LinearProbeExperiment(
+        model_short_name=model,
+        device=device,
+        batch_size=16,
+        num_workers=32,
+    )
+    linear_probe_experiment.load_or_run_experiment()
+    del linear_probe_experiment
 
-    start_time = time.time()
     typographic_score_experiment = TypographicScoreExperiment(
         model_short_name=model,
         device=device,
@@ -62,33 +61,27 @@ def main(args):
     greedy_selection_experiment.load_or_run_experiment()
     del greedy_selection_experiment
 
-    end_time = time.time()
-    print(f"Greedy selection experiment took {end_time - start_time} seconds")
-    total_time = end_time - start_time
-    with open("total_time.txt", "a") as f:
-        f.write(f"{model} {mode} {total_time}\n")
-
-    # non_typo_zeroshot_eval_experiment = ZeroShotEval(
-    #     model_short_name=model,
-    #     device=device,
-    #     mode=mode,
-    #     dataset_list=[
-    #         "imagenet-100-typo",
-    #         "food101",
-    #         "rta100",
-    #         "scam",
-    #         "fgvc-aircraft",
-    #         "disentangling",
-    #         "isic2019",
-    #         "melanoma",
-    #         "chest-xray",
-    #         "paint",
-    #         "bcn",
-    #         "ham10k",
-    #     ],
-    # )
-    # non_typo_zeroshot_eval_experiment.load_or_run_experiment()
-    # del non_typo_zeroshot_eval_experiment
+    non_typo_zeroshot_eval_experiment = ZeroShotEval(
+        model_short_name=model,
+        device=device,
+        mode=mode,
+        dataset_list=[
+            "imagenet-100-typo",
+            "food101",
+            "rta100",
+            "scam",
+            "fgvc-aircraft",
+            "disentangling",
+            "isic2019",
+            "melanoma",
+            "chest-xray",
+            "paint",
+            "bcn",
+            "ham10k",
+        ],
+    )
+    non_typo_zeroshot_eval_experiment.load_or_run_experiment()
+    del non_typo_zeroshot_eval_experiment
 
 
 if __name__ == "__main__":

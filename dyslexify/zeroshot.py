@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 import torch
 from tqdm import tqdm
 import einops
-from dislexify.dataset.base import BaseTypographicDataset
+from dyslexify.dataset.base import BaseTypographicDataset
 
 
 @torch.inference_mode()

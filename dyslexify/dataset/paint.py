@@ -1,4 +1,4 @@
-from dislexify.dataset import RTA100
+from dyslexify.dataset import RTA100
 
 
 class Paint(RTA100):

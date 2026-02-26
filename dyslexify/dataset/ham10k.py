@@ -5,12 +5,13 @@ import torch
 from PIL import Image
 from pathlib import Path
 from typing import Any, Dict, List
-from dislexify.dataset.base import BaseTypographicDataset
+from dyslexify.dataset.base import BaseTypographicDataset
 
 
-class ISIC2019Base(BaseTypographicDataset):
+class HAM10kBase(BaseTypographicDataset):
+
     """
-    Base class for ISIC 2019 datasets.
+    Base class for HAM10k datasets.
     """
 
     def __init__(
@@ -38,29 +39,25 @@ class ISIC2019Base(BaseTypographicDataset):
 
     def _load_dataset(self, split: str) -> pd.DataFrame:
         """
-        Load the ISIC 2019 dataset metadata for the specified split.
+        Load the HAM10k dataset metadata for the specified split.
 
-        Returns a DataFrame with label columns coerced to booleans.
+        Returns a DataFrame with the HAM10k data.
         """
-        data_path = self.data_path / "ISIC_2019_Training_GroundTruth.csv"
+        data_path = self.data_path / "HAM10000_metadata.csv"
 
         if not data_path.exists():
-            raise FileNotFoundError(f"Ground truth file not found: {data_path}")
+            raise FileNotFoundError(f"HAM10k data file not found: {data_path}")
 
         metadata = pd.read_csv(data_path)
 
-        # Normalize label columns to boolean for robustness
-        label_cols = ["MEL", "NV", "BCC", "AK", "BKL", "DF", "VASC", "SCC", "UNK"]
-        for col in label_cols:
-            if col in metadata.columns:
-                values = pd.to_numeric(metadata[col], errors="coerce").fillna(0)
-                metadata[col] = (values == 1.0).astype(bool)
+        # HAM10k doesn't have explicit splits, so we'll use all data for any split
+        # In practice, you might want to implement a proper train/test split here
 
         return metadata
 
     def _get_valid_classes(self) -> List[str]:
         """
-        Extract valid classes from the ISIC dataset.
+        Extract valid classes from the HAM10k dataset.
 
         Returns:
             List of valid class names that can be used for typographic attacks
@@ -70,8 +67,13 @@ class ISIC2019Base(BaseTypographicDataset):
     def _get_sample_data(self, index: int) -> Dict[str, Any]:
         row = self.dataset.iloc[index]
 
-        train_dir = self.data_path / "Train"
-        image_path = train_dir / f"{row['image']}.jpg"
+        # HAM10k images are stored with their image_id as filename
+        image_id = row["image_id"]
+        image_filename = f"{image_id}.jpg"
+
+        # Images are in the images subdirectory
+        image_path = self.data_path / "images" / image_filename
+
 
         if not image_path.exists():
             raise FileNotFoundError(f"Image not found: {image_path}")
@@ -83,7 +85,7 @@ class ISIC2019Base(BaseTypographicDataset):
         return {
             "image": image,
             "class": class_idx,
-            "image_name": row["image"],
+            "image_name": image_id,
         }
 
     def _get_sample_with_class_text(self, index: int) -> Dict[str, Any]:
@@ -96,7 +98,7 @@ class ISIC2019Base(BaseTypographicDataset):
         try:
             return self.classes.index(class_name)
         except ValueError:
-            raise ValueError(f"Class '{class_name}' not found in ISIC classes")
+            raise ValueError(f"Class '{class_name}' not found in HAM10k classes")
 
     def _get_dataset_size(self) -> int:
         return len(self.dataset)
@@ -108,11 +110,11 @@ class ISIC2019Base(BaseTypographicDataset):
             raise ValueError(f"Invalid class index: {index}")
 
 
-class ISIC2019(ISIC2019Base):
+class HAM10k(HAM10kBase):
     """
-    Typographic attack dataset for ISIC skin lesion classification.
+    Typographic attack dataset for HAM10k skin lesion classification.
 
-    This class extends BaseTypographicDataset to work with ISIC datasets,
+    This class extends BaseTypographicDataset to work with HAM10k datasets,
     providing typographic attack functionality for skin lesion images.
     """
 
@@ -126,10 +128,10 @@ class ISIC2019(ISIC2019Base):
         num_workers: int = None,
     ):
         """
-        Initialize the ISIC typographic dataset.
+        Initialize the HAM10k typographic dataset.
 
         Args:
-            root: Root directory containing ISIC dataset
+            root: Root directory containing HAM10k dataset
             split: Dataset split (train, val, test)
             preprocess: Optional preprocessing function
             return_index: Whether to return sample index
@@ -138,15 +140,13 @@ class ISIC2019(ISIC2019Base):
         """
 
         self.classes = [
-            "Melanoma",
-            "Melanocytic nevus",
-            "Basal cell carcinoma",
-            "Actinic keratosis",
-            "Benign keratosis",
+            "Actinic Keratoses",
+            "Basal Cell Carcinoma",
+            "Benign Keratosis-like Lesions",
             "Dermatofibroma",
-            "Vascular lesion",
-            "Squamous cell carcinoma",
-            "Unknown skin lesion",
+            "Melanoma",
+            "Melanocytic Nevi",
+            "Vascular Lesions",
         ]
 
         super().__init__(
@@ -160,49 +160,49 @@ class ISIC2019(ISIC2019Base):
 
     def _get_class_index_from_row(self, row: pd.Series) -> int:
         """
-        Map abbreviated one-hot labels to the human-readable class index.
-        Falls back to "Unknown skin lesion" when none are marked.
+        Map HAM10k diagnosis codes to the class names.
         """
-        abbr_to_class = {
-            "MEL": "Melanoma",
-            "NV": "Melanocytic nevus",
-            "BCC": "Basal cell carcinoma",
-            "AK": "Actinic keratosis",
-            "BKL": "Benign keratosis",
-            "DF": "Dermatofibroma",
-            "VASC": "Vascular lesion",
-            "SCC": "Squamous cell carcinoma",
-            "UNK": "Unknown skin lesion",
+        diagnosis_to_class = {
+            "akiec": "Actinic Keratoses",
+            "bcc": "Basal Cell Carcinoma",
+            "bkl": "Benign Keratosis-like Lesions",
+            "df": "Dermatofibroma",
+            "mel": "Melanoma",
+            "nv": "Melanocytic Nevi",
+            "vasc": "Vascular Lesions",
         }
 
-        for abbr, class_name in abbr_to_class.items():
-            if abbr in row and bool(row[abbr]):
-                return self._get_class_index(class_name)
+        diagnosis = row["dx"]
 
-        return self._get_class_index("Unknown skin lesion")
+        if diagnosis in diagnosis_to_class:
+            class_name = diagnosis_to_class[diagnosis]
+            return self._get_class_index(class_name)
+        else:
+            raise ValueError(f"Unsupported diagnosis: {diagnosis}")
 
 
-class ISIC2019Binary(ISIC2019Base):
+class HAM10kBinary(HAM10kBase):
     """
-    Binary typographic attack dataset for ISIC skin lesion classification.
+    Binary typographic attack dataset for HAM10k skin lesion classification.
 
-    This class provides binary classification (melanoma vs non-melanoma)
-    for typographic attacks on ISIC datasets.
+    This class provides binary classification (malignant vs benign)
+    for typographic attacks on HAM10k datasets.
     """
 
     def __init__(
         self,
         root: str,
+        split: str = "train",
         preprocess=None,
         return_index: bool = False,
         position: str = "random",
         num_workers: int = None,
     ):
         """
-        Initialize the ISIC binary typographic dataset.
+        Initialize the HAM10k binary typographic dataset.
 
         Args:
-            root: Root directory containing ISIC dataset
+            root: Root directory containing HAM10k dataset
             split: Dataset split (train, val, test)
             preprocess: Optional preprocessing function
             return_index: Whether to return sample index
@@ -210,7 +210,7 @@ class ISIC2019Binary(ISIC2019Base):
             num_workers: Number of worker processes for generation
         """
         self.classes = ["Benign", "Malignant"]
-        split = "train"
+
         super().__init__(
             root=root,
             split=split,
@@ -242,25 +242,31 @@ class ISIC2019Binary(ISIC2019Base):
             row: Metadata row
 
         Returns:
-            Class index (0 or 1)
+            Class index (0 for benign, 1 for malignant)
         """
-        if row["MEL"] or row["BCC"] or row["SCC"] or row["AK"]:
-            return 1
+        diagnosis = row["dx"]
+
+        # Malignant diagnoses in HAM10k
+        malignant_diagnoses = ["mel", "bcc", "akiec"]
+
+        if diagnosis in malignant_diagnoses:
+            return 1  # Malignant
         else:
-            return 0
+            return 0  # Benign
 
 
 if __name__ == "__main__":
-    # Example usage of the multi-class ISIC dataset
-    ds = ISIC2019(
-        root="/datasets/isic2019_typo",
+    # Example usage of the multi-class HAM10k dataset
+    ds = HAM10k(
+        root="/data/datasets/HAM",
         split="train",
         position="random",
     )
 
-    # Example usage of the binary ISIC dataset (melanoma vs non-melanoma)
-    ds_binary = ISIC2019Binary(
-        root="/datasets/isic2019_typo",
+    # Example usage of the binary HAM10k dataset (malignant vs benign)
+    ds_binary = HAM10kBinary(
+        root="/data/datasets/HAM",
         split="train",
         position="random",
     )
+# %%

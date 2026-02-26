@@ -1,9 +1,9 @@
 from torch import nn
-from dislexify.cache.hooks import (
+from dyslexify.cache.hooks import (
     create_zero_cls_attention_result_hook,
     create_zero_spatial_attention_result_hook,
 )
-from dislexify.cache.collector import change_attn_implementation_to_hookable
+from dyslexify.cache.collector import change_attn_implementation_to_hookable
 from typing import List, Tuple
 
 
@@ -14,7 +14,7 @@ def dislexify_openclip_model(
     Dislexify an OpenCLIP model.
 
     Args:
-        model (nn.Module): The OpenCLIP model to dislexify.
+        model (nn.Module): The OpenCLIP model to dyslexify.
 
     Returns:
         nn.Module: The dislexified OpenCLIP model.

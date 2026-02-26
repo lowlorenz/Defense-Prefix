@@ -10,7 +10,7 @@ import torch
 from typing import Optional, List, TypeVar, Iterator
 from dataclasses import dataclass, field
 from abc import ABC
-from dislexify.cache.block import BlockResidual, BlockAttention, T
+from dyslexify.cache.block import BlockResidual, BlockAttention, T
 
 A = TypeVar("A", bound="ActivationCacheBase")
 

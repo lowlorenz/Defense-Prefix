@@ -5,13 +5,12 @@ import torch
 from PIL import Image
 from pathlib import Path
 from typing import Any, Dict, List
-from dislexify.dataset.base import BaseTypographicDataset
+from dyslexify.dataset.base import BaseTypographicDataset
 
 
-class HAM10kBase(BaseTypographicDataset):
-
+class BCN20kBase(BaseTypographicDataset):
     """
-    Base class for HAM10k datasets.
+    Base class for BCN 20k datasets.
     """
 
     def __init__(
@@ -39,25 +38,33 @@ class HAM10kBase(BaseTypographicDataset):
 
     def _load_dataset(self, split: str) -> pd.DataFrame:
         """
-        Load the HAM10k dataset metadata for the specified split.
+        Load the BCN 20k dataset metadata for the specified split.
 
-        Returns a DataFrame with the HAM10k data.
+        Returns a DataFrame with the BCN data.
         """
-        data_path = self.data_path / "HAM10000_metadata.csv"
+        if split == "train":
+            data_path = self.data_path / "bcn_20k_train.csv"
+        else:
+            # For test/val, we'll use train data (since only train CSV is provided)
+            # In practice, you might want to split the train data
+            data_path = self.data_path / "bcn_20k_train.csv"
 
         if not data_path.exists():
-            raise FileNotFoundError(f"HAM10k data file not found: {data_path}")
+            raise FileNotFoundError(f"BCN data file not found: {data_path}")
 
         metadata = pd.read_csv(data_path)
 
-        # HAM10k doesn't have explicit splits, so we'll use all data for any split
-        # In practice, you might want to implement a proper train/test split here
+        # Filter by split if column exists
+        if "split" in metadata.columns and split != "train":
+            # If we want test data but only have train CSV, we'll use all data
+            # You might want to implement a proper train/test split here
+            pass
 
         return metadata
 
     def _get_valid_classes(self) -> List[str]:
         """
-        Extract valid classes from the HAM10k dataset.
+        Extract valid classes from the BCN dataset.
 
         Returns:
             List of valid class names that can be used for typographic attacks
@@ -67,13 +74,24 @@ class HAM10kBase(BaseTypographicDataset):
     def _get_sample_data(self, index: int) -> Dict[str, Any]:
         row = self.dataset.iloc[index]
 
-        # HAM10k images are stored with their image_id as filename
-        image_id = row["image_id"]
-        image_filename = f"{image_id}.jpg"
+        # Determine the correct image directory based on the filename
+        # BCN test images are in BCN_20k_test/bcn_20k_test/
+        # Training images should be in a similar structure or main directory
+        bcn_filename = row["bcn_filename"]
 
-        # Images are in the images subdirectory
-        image_path = self.data_path / "images" / image_filename
+        # Try test directory first
+        test_dir = self.data_path / "BCN_20k_test" / "bcn_20k_test"
+        image_path = test_dir / bcn_filename
 
+        # If not found in test, try main directory or train directory
+        if not image_path.exists():
+            # Try other possible locations
+            train_dir = self.data_path / "BCN_20k_train" / "bcn_20k_train"
+            if train_dir.exists():
+                image_path = train_dir / bcn_filename
+            else:
+                # Try main directory
+                image_path = self.data_path / bcn_filename
 
         if not image_path.exists():
             raise FileNotFoundError(f"Image not found: {image_path}")
@@ -85,7 +103,7 @@ class HAM10kBase(BaseTypographicDataset):
         return {
             "image": image,
             "class": class_idx,
-            "image_name": image_id,
+            "image_name": bcn_filename.replace(".jpg", ""),
         }
 
     def _get_sample_with_class_text(self, index: int) -> Dict[str, Any]:
@@ -98,7 +116,7 @@ class HAM10kBase(BaseTypographicDataset):
         try:
             return self.classes.index(class_name)
         except ValueError:
-            raise ValueError(f"Class '{class_name}' not found in HAM10k classes")
+            raise ValueError(f"Class '{class_name}' not found in BCN classes")
 
     def _get_dataset_size(self) -> int:
         return len(self.dataset)
@@ -110,11 +128,11 @@ class HAM10kBase(BaseTypographicDataset):
             raise ValueError(f"Invalid class index: {index}")
 
 
-class HAM10k(HAM10kBase):
+class BCN20k(BCN20kBase):
     """
-    Typographic attack dataset for HAM10k skin lesion classification.
+    Typographic attack dataset for BCN 20k skin lesion classification.
 
-    This class extends BaseTypographicDataset to work with HAM10k datasets,
+    This class extends BaseTypographicDataset to work with BCN datasets,
     providing typographic attack functionality for skin lesion images.
     """
 
@@ -128,10 +146,10 @@ class HAM10k(HAM10kBase):
         num_workers: int = None,
     ):
         """
-        Initialize the HAM10k typographic dataset.
+        Initialize the BCN typographic dataset.
 
         Args:
-            root: Root directory containing HAM10k dataset
+            root: Root directory containing BCN dataset
             split: Dataset split (train, val, test)
             preprocess: Optional preprocessing function
             return_index: Whether to return sample index
@@ -144,8 +162,9 @@ class HAM10k(HAM10kBase):
             "Basal Cell Carcinoma",
             "Benign Keratosis-like Lesions",
             "Dermatofibroma",
-            "Melanoma",
             "Melanocytic Nevi",
+            "Melanoma",
+            "Squamous Cell Carcinoma",
             "Vascular Lesions",
         ]
 
@@ -160,19 +179,20 @@ class HAM10k(HAM10kBase):
 
     def _get_class_index_from_row(self, row: pd.Series) -> int:
         """
-        Map HAM10k diagnosis codes to the class names.
+        Map BCN diagnosis codes to the class names.
         """
         diagnosis_to_class = {
-            "akiec": "Actinic Keratoses",
-            "bcc": "Basal Cell Carcinoma",
-            "bkl": "Benign Keratosis-like Lesions",
-            "df": "Dermatofibroma",
-            "mel": "Melanoma",
-            "nv": "Melanocytic Nevi",
-            "vasc": "Vascular Lesions",
+            "AK": "Actinic Keratoses",
+            "BCC": "Basal Cell Carcinoma",
+            "BKL": "Benign Keratosis-like Lesions",
+            "DF": "Dermatofibroma",
+            "NV": "Melanocytic Nevi",
+            "MEL": "Melanoma",
+            "SCC": "Squamous Cell Carcinoma",
+            "VASC": "Vascular Lesions",
         }
 
-        diagnosis = row["dx"]
+        diagnosis = row["diagnosis"]
 
         if diagnosis in diagnosis_to_class:
             class_name = diagnosis_to_class[diagnosis]
@@ -181,12 +201,12 @@ class HAM10k(HAM10kBase):
             raise ValueError(f"Unsupported diagnosis: {diagnosis}")
 
 
-class HAM10kBinary(HAM10kBase):
+class BCN20kBinary(BCN20kBase):
     """
-    Binary typographic attack dataset for HAM10k skin lesion classification.
+    Binary typographic attack dataset for BCN 20k skin lesion classification.
 
     This class provides binary classification (malignant vs benign)
-    for typographic attacks on HAM10k datasets.
+    for typographic attacks on BCN datasets.
     """
 
     def __init__(
@@ -199,10 +219,10 @@ class HAM10kBinary(HAM10kBase):
         num_workers: int = None,
     ):
         """
-        Initialize the HAM10k binary typographic dataset.
+        Initialize the BCN binary typographic dataset.
 
         Args:
-            root: Root directory containing HAM10k dataset
+            root: Root directory containing BCN dataset
             split: Dataset split (train, val, test)
             preprocess: Optional preprocessing function
             return_index: Whether to return sample index
@@ -244,10 +264,10 @@ class HAM10kBinary(HAM10kBase):
         Returns:
             Class index (0 for benign, 1 for malignant)
         """
-        diagnosis = row["dx"]
+        diagnosis = row["diagnosis"]
 
-        # Malignant diagnoses in HAM10k
-        malignant_diagnoses = ["mel", "bcc", "akiec"]
+        # Malignant diagnoses
+        malignant_diagnoses = ["MEL", "BCC", "SCC"]
 
         if diagnosis in malignant_diagnoses:
             return 1  # Malignant
@@ -256,16 +276,16 @@ class HAM10kBinary(HAM10kBase):
 
 
 if __name__ == "__main__":
-    # Example usage of the multi-class HAM10k dataset
-    ds = HAM10k(
-        root="/data/datasets/HAM",
+    # Example usage of the multi-class BCN dataset
+    ds = BCN20k(
+        root="/datasets/BCN_20k",
         split="train",
         position="random",
     )
 
-    # Example usage of the binary HAM10k dataset (malignant vs benign)
-    ds_binary = HAM10kBinary(
-        root="/data/datasets/HAM",
+    # Example usage of the binary BCN dataset (malignant vs benign)
+    ds_binary = BCN20kBinary(
+        root="/datasets/BCN_20k",
         split="train",
         position="random",
     )

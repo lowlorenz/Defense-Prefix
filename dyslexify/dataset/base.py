@@ -8,7 +8,7 @@ from tqdm import tqdm
 import multiprocessing as mp
 from functools import partial
 from typing import Tuple, List, Any, Dict, Optional
-from dislexify.dataset.utils import create_typographic_attack_image
+from dyslexify.dataset.utils import create_typographic_attack_image
 
 
 class BaseTypographicDataset(Dataset, ABC):

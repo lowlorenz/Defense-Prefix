@@ -12,7 +12,7 @@ Classes:
 """
 from __future__ import annotations
 
-from dislexify.config import MODELS
+from dyslexify.config import MODELS
 import torch.nn as nn
 import torch
 from nnsight import NNsight
@@ -20,7 +20,7 @@ import open_clip
 from abc import ABC, abstractmethod
 from typing import List
 
-from dislexify.cache.cache import (
+from dyslexify.cache.cache import (
     ResidualCache,
     AttentionCache,
     LabeledResidualCache,
@@ -31,9 +31,9 @@ from dislexify.cache.cache import (
     LabeledActivationCache,
     TypoLabeledActivationCache,
 )
-from dislexify.cache.block import BlockResidual, BlockAttention
-from dislexify.cache.multi_head_attention import MultiheadAttentionWithWeightHook
-from dislexify.cache.hooks import create_layer_specific_attn_capture_hook
+from dyslexify.cache.block import BlockResidual, BlockAttention
+from dyslexify.cache.multi_head_attention import MultiheadAttentionWithWeightHook
+from dyslexify.cache.hooks import create_layer_specific_attn_capture_hook
 
 
 class ActivationCollector(ABC):

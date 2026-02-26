@@ -1,5 +1,5 @@
 # %%
-from dislexify.dataset.base import BaseRealTypographicDataset
+from dyslexify.dataset.base import BaseRealTypographicDataset
 from PIL import Image
 import torch
 from typing import Tuple

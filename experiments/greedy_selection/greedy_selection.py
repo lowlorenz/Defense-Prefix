@@ -25,14 +25,14 @@ import open_clip
 import torch
 from torch.utils.data import DataLoader, Subset
 
-from dislexify.cache.collector import change_attn_implementation_to_hookable
-from dislexify.cache.hooks import (
+from dyslexify.cache.collector import change_attn_implementation_to_hookable
+from dyslexify.cache.hooks import (
     create_zero_cls_attention_result_hook,
     create_zero_spatial_attention_result_hook,
 )
-from dislexify.config import MODELS
-from dislexify.dataset import Melanoma, ChestXRay, ImageNet100
-from dislexify.zeroshot import zeroshot_classifier, calculate_text_features
+from dyslexify.config import MODELS
+from dyslexify.dataset import Melanoma, ChestXRay, ImageNet100
+from dyslexify.zeroshot import zeroshot_classifier, calculate_text_features
 from pathlib import Path
 
 

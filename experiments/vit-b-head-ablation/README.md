@@ -137,7 +137,7 @@ Contains summary statistics and rankings:
 
 - `torch`
 - `open_clip`
-- `dislexify` package
+- `dyslexify` package
 - ImageNet-100 dataset with typographic perturbations
 
 ## Example Analysis

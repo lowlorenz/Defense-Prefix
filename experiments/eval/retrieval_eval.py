@@ -1,9 +1,9 @@
 import open_clip
-from dislexify.config import MODELS
+from dyslexify.config import MODELS
 from typing import List, Dict, Tuple
 from torch import nn
 from typing import Any
-from dislexify.dataset import (
+from dyslexify.dataset import (
     ImageNet100,
     Food101,
     FGVCAircraft,
@@ -16,8 +16,8 @@ from dislexify.dataset import (
     Paint,
 )
 from torch.utils.data import DataLoader
-from dislexify.zeroshot import calculate_text_features, zeroshot_retrieval
-from dislexify.defend import dislexify_openclip_model
+from dyslexify.zeroshot import calculate_text_features, zeroshot_retrieval
+from dyslexify.defend import dislexify_openclip_model
 import torch
 import json
 from pathlib import Path
